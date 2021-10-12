@@ -2,15 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <iostream>
 
-#define NUM			100000
+using namespace std;
+
+//試行回数
+#define NUM		100
 //これから投入する紡がれた運命の数
-#define NOW_STONE	1
+int NOW_STONE;
 //最後に星5を引いてから今までに星5以外を引いた回数
-#define INIT_STONE	78
+int INIT_STONE;
 //神鋳軌定してから今までに星5以外を引いた回数(神鋳軌定する前に星5以外を何回か引いたならその数を加える)
-#define ALL_INIT_STONE	238
+int ALL_INIT_STONE;
 
+int N;
+int M;
 int num[NUM] = { 0 };
 int non_pickup[2] = { 0 };
 int pickup[2] = { 0 };
@@ -20,10 +26,14 @@ int now_stone = 0;
 
 
 void init() {
-	non_pickup[0] = 1;
-	non_pickup[1] = 0;
-	pickup[0] = 1;
-	pickup[1] = 0;
+	for (int i = 0; i < 2; i++)
+		non_pickup[i] = 0;
+	for (int i = 0; i < 2; i++)
+		pickup[i] = 0;
+	for (int i = 0; i < N; i++)
+		non_pickup[i] = 1;
+	for (int i = 0; i < M; i++)
+		pickup[i] = 1;
 	wanted = 0;
 }
 
@@ -34,8 +44,6 @@ int sum() {
 
 void five_star(int i) {
 	int p = rand() % 1000;
-//	printf("p=%d\n", p);
-//	printf("five_star\n");
 	if (sum() == 2)
 		wanted++;
 	else if (non_pickup[0] == 0) {
@@ -67,32 +75,56 @@ void five_star(int i) {
 	else printf("error!\n");
 }
 
+void set() {
+	cout << "これから投入する紡がれた運命の数：";
+	cin >> NOW_STONE;
+
+	cout << "\n神鋳軌定してから今までに星5以外を引いた回数\n(神鋳軌定する前に星5以外を何回か引いたならその数を加える)：";
+	cin >> ALL_INIT_STONE;
+
+	cout << "\n最後に星5を引いてから今までに星5以外を引いた回数：";
+	cin >> INIT_STONE;
+
+	cout << "\n神鋳軌定してからピックアップではない星5を引いた回数：";
+	cin >> N;
+
+	cout << "\n神鋳軌定してからピックアップの星5を引いた回数：";
+	cin >> M;
+	cout << "\n";
+
+	for (int i = 0; i < N; i++)
+		non_pickup[i] = 1;
+	for (int i = 0; i < M; i++)
+		pickup[i] = 1;
+}
+
 int main() {
+	set();
+
 	srand((unsigned int)time(NULL));
 	for (int j = 0; j < NUM; j++) {
 		//初期化
-		bool flag = false;
-//		num[j] = INIT_STONE;
 		init();
+//		num[j] = INIT_STONE;
 		bool initFlag = true;
-		num[j] += ALL_INIT_STONE - INIT_STONE;
+		num[j] = ALL_INIT_STONE - INIT_STONE;
 
-		for (int i = 0; i < 3; i++) {//切り捨て
+		for (int i = 0; i < 3; i++) {
+			bool flag = false;
 			if (wanted != 0) break;
-			int ini = 0;
-			if (initFlag) ini = INIT_STONE;
-			else ini = 0;
-			for (int l = ini; l < 79; l++) {
+			int Init = 0;
+			if (initFlag) Init = INIT_STONE;
+			else Init = 0;
+			for (int l = Init; l < 79; l++) {
 				int p = rand() % 1000;
 				//4star
 				if (l % 10 == 9) continue;
-//				if (p >= 10 && p < 20) continue;
 				//5star
 				if (p < 7) {
 //					if (initFlag)
 //						num[j] += l + 1 - INIT_STONE;
 //					else
-						num[j] += l + 1;
+					num[j] += l + 1;
 //					printf("num[%d]=%d\n", j, num[j]);
 					five_star(i);
 					flag = true;
@@ -106,7 +138,7 @@ int main() {
 //			if (initFlag)
 //				num[j] += 80 - INIT_STONE;
 //			else
-				num[j] += 80;
+			num[j] += 80;
 //			printf("* num[%d]=%d\n", j, num[j]);
 			five_star(i);
 			initFlag = false;
@@ -115,7 +147,7 @@ int main() {
 //		printf("stoneNum=%d\n", wanted_num[j]);
 		if (num[j] == 240) unfortune++;
 		if (num[j] <= NOW_STONE + ALL_INIT_STONE) now_stone ++;
-//		if (num[j] > 240) printf("error!\n");
+		if (num[j] > 240) printf("error!\n");
 //		printf("\n");
 	}
 
@@ -123,8 +155,10 @@ int main() {
 	for (int i = 0; i < NUM; i++) {
 		sum_stone += num[i];
 	}
-	printf("mean_stone=%.1f\n", (double)sum_stone / (double)NUM - ALL_INIT_STONE);
-	printf("unfortune_percent=%.1f[%%]\n", 100*(double)unfortune / (double)NUM);
-	printf("now_stone_percent=%.2f[%%], NOW_STONE=%d\n", 100 * (double)now_stone / (double)NUM, NOW_STONE);
+	double mean_stone = (double)sum_stone / (double)NUM - ALL_INIT_STONE;
+	cout << NOW_STONE<<" 個の石で少なくとも一つ星5を引く確率は " << 100.0 * (double)now_stone / (double)NUM << " %です\n";
+//	cout << "あと平均 " << mean_stone << " 回で星5を引きます\n";
+//	cout << "一回も天井まで星5を引かない確率は " << 100.0 * (double)unfortune / (double)NUM << " %です\n";
+
 	return 0;
 }
